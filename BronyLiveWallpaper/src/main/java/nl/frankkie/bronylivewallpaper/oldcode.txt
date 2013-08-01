@@ -1,0 +1,41 @@
+ Movie mMovie;
+        long mMovieStart = 0;
+        Paint paint = new Paint();
+        private void drawStuffOld2(Canvas canvas) {
+            paint.setColor(Color.BLACK);
+            canvas.drawRect(0,0,canvas.getWidth(),canvas.getHeight(),paint);
+            long now = android.os.SystemClock.uptimeMillis();
+            if (mMovieStart == 0) {   // first time
+                mMovieStart = now;
+            }
+            if (mMovie != null) {
+                int dur = mMovie.duration();
+                if (dur == 0) {
+                    dur = 600;
+                }
+                int relTime = (int) ((now - mMovieStart) % dur);
+                mMovie.setTime(relTime);
+                mMovie.draw(canvas, 200, 200);
+            } else {
+                InputStream is = MyWallpaperService.this.getResources().openRawResource(R.raw.aj_gallop_right_2x);
+                mMovie = Movie.decodeStream(is);
+            }
+        }
+
+        int x = 100;
+        int y = 100;
+
+        private void drawStuffOld1(Canvas canvas) {
+            Paint paint = new Paint();
+            paint.setColor(Color.BLACK);
+            canvas.drawRect(0, 0, canvas.getWidth(), canvas.getHeight(), paint);
+            paint.setColor(Color.GREEN);
+            canvas.drawCircle(x++, y += 2, 150, paint);
+            if (x > 450) {
+                x = 100;
+            }
+
+            if (y > 750) {
+                y = 100;
+            }
+        }
