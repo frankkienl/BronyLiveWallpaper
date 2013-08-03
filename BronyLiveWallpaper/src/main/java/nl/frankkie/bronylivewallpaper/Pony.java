@@ -315,7 +315,7 @@ public class Pony {
         float probability; //0.1 - 1.0
         float maxDuration;
         float minDuration;
-        int movementSpeed; //pixels per 100ms, so calculate for current refresh rate!
+        float movementSpeed; //pixels per 100ms, so calculate for current refresh rate!
         String imageRight;
         String imageLeft;
         String movementsAllowed;
@@ -326,7 +326,7 @@ public class Pony {
             probability = Float.parseFloat(line[2]);
             maxDuration = Float.parseFloat(line[3]);
             minDuration = Float.parseFloat(line[4]);
-            movementSpeed = Integer.parseInt(line[5]);
+            movementSpeed = Float.parseFloat(line[5]);
             imageRight = line[6];
             imageLeft = line[7];
             movementsAllowed = line[8];

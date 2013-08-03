@@ -7,12 +7,14 @@ import android.graphics.Color;
 import android.graphics.Movie;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.os.AsyncTask;
 import android.os.Handler;
 import android.service.wallpaper.WallpaperService;
 import android.view.SurfaceHolder;
 
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * Created by FrankkieNL on 31-7-13.
@@ -21,9 +23,9 @@ import java.util.ArrayList;
  */
 public class MyWallpaperService extends WallpaperService {
 
-    ArrayList<Pony> ponies = new ArrayList<Pony>();
+    CopyOnWriteArrayList<Pony> ponies = new CopyOnWriteArrayList<Pony>();
     Paint paint;
-    public static Rect screen = new Rect(0,0,240,320); //smallest possible
+    public static Rect screen = new Rect(0, 0, 240, 320); //smallest possible
 
     @Override
     public Engine onCreateEngine() {
@@ -54,9 +56,9 @@ public class MyWallpaperService extends WallpaperService {
             if (paint == null) {
                 paint = new Paint();
             }
-            backgroundImage = BitmapFactory.decodeResource(getResources(),R.drawable.background);
-            initPony("Applejack");
-            initPony("Princess Twilight Sparkle");
+            backgroundImage = BitmapFactory.decodeResource(getResources(), R.drawable.background);
+            LoadPoniesTask task = new LoadPoniesTask();
+            task.execute();
             //
             Thread t = new Thread(new Runnable() {
                 @Override
@@ -65,6 +67,15 @@ public class MyWallpaperService extends WallpaperService {
                 }
             });
             t.start();
+        }
+
+        public void initPonies() {
+            initPony("Applejack");
+            initPony("Fluttershy");
+            initPony("Pinkie Pie");
+            initPony("Rainbow Dash");
+            initPony("Rarity");
+            initPony("Princess Twilight Sparkle");
         }
 
         public void initPony(String name) {
@@ -79,13 +90,15 @@ public class MyWallpaperService extends WallpaperService {
 //            } else {
 //                handler.removeCallbacks(drawRunner);
 //            }
-            Thread t = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    gameLoop();
-                }
-            });
-            t.start();
+            if (visible) {
+                Thread t = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        gameLoop();
+                    }
+                });
+                t.start();
+            }
         }
 
         private void draw() {
@@ -95,7 +108,7 @@ public class MyWallpaperService extends WallpaperService {
                 canvas = surfaceHolder.lockCanvas();
                 if (canvas != null) {
                     //Draw stuff
-                    screen = new Rect(0,0,canvas.getWidth(),canvas.getHeight());
+                    screen = new Rect(0, 0, canvas.getWidth(), canvas.getHeight());
                     drawStuff(canvas);
                 }
             } finally {
@@ -112,7 +125,15 @@ public class MyWallpaperService extends WallpaperService {
         public void drawStuff(Canvas canvas) {
             //paint.setColor(Color.BLACK);
             //canvas.drawRect(0, 0, canvas.getWidth(), canvas.getHeight(), paint);
-            canvas.drawBitmap(backgroundImage,0,0,paint);
+            canvas.drawBitmap(backgroundImage, 0, 0, paint);
+
+            if (ponies.size() == 0) {
+                paint.setColor(Color.BLACK);
+                paint.setTextSize(25f);
+                paint.setFakeBoldText(true);
+                canvas.drawText("Please Wait.. Loading Ponies...", 50, 50, paint);
+            }
+
             for (Pony pony : ponies) {
                 pony.draw(canvas, paint);
             }
@@ -181,5 +202,13 @@ public class MyWallpaperService extends WallpaperService {
             }
         }
 
+        public class LoadPoniesTask extends AsyncTask<Void, Void, Void> {
+            @Override
+            protected Void doInBackground(Void... voids) {
+                initPonies();
+                return null;
+            }
+        }
     }
+
 }
