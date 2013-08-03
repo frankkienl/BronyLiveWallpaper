@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Movie;
 import android.graphics.Paint;
 import android.graphics.Rect;
@@ -23,16 +24,17 @@ import jp.tomorrowkey.android.gifplayer.GifDecoder;
  */
 public class Pony {
 
-    public static final int DIR_LEFT = 0;
-    public static final int DIR_UP = 270;
-    public static final int DIR_RIGHT = 180;
-    public static final int DIR_DOWN = 90;
+    public static final int DIR_LEFT = 180;
+    public static final int DIR_UP = 90;
+    public static final int DIR_RIGHT = 0;
+    public static final int DIR_DOWN = 270;
     //TODO FIX THESE
     public static final int DIR_LEFT_UP = 135;
     public static final int DIR_LEFT_DOWN = 225;
     public static final int DIR_RIGHT_UP = 45;
     public static final int DIR_RIGHT_DOWN = 325;
 
+    boolean debug = false;
     float positionX = 50; //default
     float positionY = 150; //default
     int width = 130; //default
@@ -45,15 +47,21 @@ public class Pony {
     Behaviour currentBehaviour = null;
     float velocity = 0f;
     float direction = 0f;
-    Rect screen;
     long timeToChangeBehaviour = 0;
     boolean imageRight = true;
     GifDecoder gifDecoder;
+    long gifTimeForNextFrame = 0L;
+    Bitmap currentFrameBitmap = null;
+    int currentFrameInt = 0;
 
     public Pony(Context context, String name) {
         this.name = name;
         this.context = context;
         init();
+    }
+
+    public Rect getScreen() {
+        return MyWallpaperService.screen;
     }
 
     public void setCurrentBehaviour(Behaviour behaviour) {
@@ -64,7 +72,7 @@ public class Pony {
         timeToChangeBehaviour = System.currentTimeMillis() + (long) (currentBehaviour.maxDuration * 1000);
         //timeToChangeBehaviour += (long) random.nextInt((int) ((currentBehaviour.maxDuration - currentBehaviour.minDuration) * 1000));
         //velocity and direction
-        velocity = currentBehaviour.movementSpeed;
+        velocity = currentBehaviour.movementSpeed / 3.0f; // to fix for 60fps istead of 10 fps.
         if (currentBehaviour.movementsAllowed.equalsIgnoreCase("None")) {
             direction = (random.nextBoolean()) ? DIR_LEFT : DIR_RIGHT; //just for image!
         } else if (currentBehaviour.movementsAllowed.equalsIgnoreCase("All")) {
@@ -117,13 +125,17 @@ public class Pony {
             direction = random.nextFloat();
         }
         //
-        if (direction > DIR_UP && direction < DIR_DOWN) { //right
-            imageRight = true;
-        } else {
-            imageRight = false;
-        }
+        refreshImageDirection();
         //mMovie = null; //get new image at draw time!
         gifDecoder = null;
+    }
+
+    public void refreshImageDirection(){
+        if (direction > DIR_UP && direction < DIR_DOWN) { //right
+            imageRight = false;
+        } else {
+            imageRight = true;
+        }
     }
 
     public void init() {
@@ -154,13 +166,29 @@ public class Pony {
             setCurrentBehaviour(getRandomBehaviour());
         }
         move(1.0);
+        ///
+        if (gifDecoder == null) {
+            refreshGifDecoder();
+        }
+        if (gifTimeForNextFrame < System.currentTimeMillis()) {
+//            gifTimeForNextFrame = System.currentTimeMillis() + gifDecoder.getDelay(currentFrameInt);
+            gifTimeForNextFrame = System.currentTimeMillis() + 50;
+            currentFrameInt++;
+        }
+        if (currentFrameInt > gifDecoder.getFrameCount()) {
+            currentFrameInt = 0;
+        }
+        try {
+//            currentFrameBitmap.recycle();
+            currentFrameBitmap = null;
+            //Runtime.getRuntime().gc();
+            currentFrameBitmap = gifDecoder.getFrame(currentFrameInt);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public void move(double delta) {
-        if (screen == null){
-            Log.e("BronyLiveWallpaper", "Screen == null, making default..");
-            screen = new Rect(0,0,480,800);
-        }
         //velocity -= Math.abs((float) (friction * delta));
 //        if (velocity < 0) { //limit
 //            velocity = 0;
@@ -169,62 +197,37 @@ public class Pony {
         positionY += (float) ((Math.sin((-direction) * (Math.PI / 180))) * velocity) * delta;
         positionX += (float) ((Math.cos((-direction) * (Math.PI / 180))) * velocity) * delta;
 
-        /*
-        if (outsideWrap && !limitAtEdge) {
-            if (positionY > screen.height()) {
-                positionY = 1;
-            }
-            if (positionY < 0) {
-                positionY = screen.height() - 1;
-            }
-            if (positionX > screen.width()) {
-                positionX = 1;
-            }
-            if (positionX < 0) {
-                positionX = screen.width() - 1;
-            }
-        }*/
-
-        /* NOT LIMIT, CHANGE DIRECTION!
         if (limitAtEdge && !outsideWrap) {
-            if (positionY > screen.height() - height) {
-                positionY = (screen.height() - height) - 1;
-            }
-            if (positionY < 0) {
-                positionY = 1;
-            }
-            if (positionX > screen.width() - width) {
-                positionX = (screen.width() - width) - 1;
-            }
-            if (positionX < 0) {
-                positionX = 1;
-            }
-        }*/
-
-        if (limitAtEdge && !outsideWrap) {
-            gifDecoder = null; //change image
-            if (positionY > screen.height() - height) {
-                positionY = (screen.height() - height) - 1;
+            if (positionY > getScreen().height() - height) {
+                positionY = (getScreen().height() - height) - 50;
                 direction += 180;
                 direction = direction % 360;
+                refreshImageDirection();
+                refreshGifDecoder();
                 Log.e("BornyLiveWallpaper", "Changed Direction ! " + direction);
             }
             if (positionY < 0) {
                 positionY = 1;
                 direction += 180;
                 direction = direction % 360;
+                refreshImageDirection();
+                refreshGifDecoder();
                 Log.e("BornyLiveWallpaper", "Changed Direction ! " + direction);
             }
-            if (positionX > screen.width() - width) {
-                positionX = (screen.width() - width) - 1;
+            if (positionX > getScreen().width() - width) {
+                positionX = (getScreen().width() - width) - 1;
                 direction += 180;
                 direction = direction % 360;
+                refreshImageDirection();
+                refreshGifDecoder();
                 Log.e("BornyLiveWallpaper", "Changed Direction ! " + direction);
             }
             if (positionX < 0) {
                 positionX = 1;
                 direction += 180;
                 direction = direction % 360;
+                refreshImageDirection();
+                refreshGifDecoder();
                 Log.e("BornyLiveWallpaper", "Changed Direction ! " + direction);
             }
         }
@@ -239,41 +242,41 @@ public class Pony {
         return null;
     }
 
+    public void refreshGifDecoder() {
+        try {
+            gifDecoder = new GifDecoder();
+            if (imageRight) {
+                gifDecoder.read(context.getAssets().open(name + "/" + currentBehaviour.imageRight));
+            } else {
+                gifDecoder.read(context.getAssets().open(name + "/" + currentBehaviour.imageLeft));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     /**
      * TODO fix die stuff
      */
+
     public Behaviour getRandomBehaviour() {
         Behaviour b = behaviours.get((int) (Math.random() * behaviours.size()));
-        Log.e("BronyLiveWallpaper","Changing behaviour of " + name);
+        Log.e("BronyLiveWallpaper", "Changing behaviour of " + name);
         return b;
     }
 
-    int currentFrame = 0;
     public void draw(Canvas canvas, Paint paint) {
-        if (screen == null) {
-            screen = new Rect(0, 0, canvas.getWidth(), canvas.getHeight());
-        }
-        updateTick();
         //drawTemp(canvas, paint);
-        if (gifDecoder == null) {
-            gifDecoder = new GifDecoder();
-            try {
-                if (imageRight) {
-                    gifDecoder.read(context.getAssets().open(name + "/" + currentBehaviour.imageRight));
-                } else {
-                    gifDecoder.read(context.getAssets().open(name + "/" + currentBehaviour.imageLeft));
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-                return;
-            }
+        if (currentFrameBitmap != null) {
+            canvas.drawBitmap(currentFrameBitmap, positionX, positionY, paint);
         }
-        Bitmap bitmap = gifDecoder.getFrame(currentFrame);
-        currentFrame++;
-        if (currentFrame > gifDecoder.getFrameCount()){
-            currentFrame = 0;
+        if (debug) {
+            paint.setColor(Color.WHITE);
+            canvas.drawText("X: " + positionX + "; Y: " + positionY + ";", 50, 50, paint);
+            canvas.drawText("Dir: " + direction + "; Speed: " + velocity + ";", 50, 90, paint);
+            canvas.drawText("B: " + currentBehaviour.name, 50, 130, paint);
+            canvas.drawCircle(positionX, positionY, 15, paint);
         }
-        canvas.drawBitmap(bitmap,positionX,positionY,paint);
     }
 
 

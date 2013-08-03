@@ -232,6 +232,7 @@ public class GifDecoder {
         try {
             is.close();
         } catch (Exception e) {
+            e.printStackTrace();
         }
         return status;
     }
