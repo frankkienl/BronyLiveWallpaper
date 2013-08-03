@@ -9,7 +9,7 @@ Screenshot:
 
 (Samsung Galaxy S3)
 
-![Screenshot](https://raw.github.com/frankkienl/BronyLiveWallpaper/master/screenshots/device-2013-08-03-232931.png "Screenshot")
+![Screenshot](https://raw.github.com/frankkienl/BronyLiveWallpaper/master/screenshots/device-2013-08-04-001406.png "Screenshot")
 
 Credits
 =======
