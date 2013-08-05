@@ -154,7 +154,7 @@ public class Pony {
             e.printStackTrace();
         }
         //
-        Log.e("BronyLiveWallpaper", "Loaded " + name);
+        CLog.v("BronyLiveWallpaper", "Loaded " + name);
         setCurrentBehaviour(getRandomBehaviour());
 
         positionY = (float) (50 + (Math.random() * 600));
@@ -204,7 +204,7 @@ public class Pony {
                 direction = direction % 360;
                 refreshImageDirection();
                 refreshGifDecoder();
-                Log.e("BornyLiveWallpaper", "Changed Direction ! " + direction);
+                CLog.v("BornyLiveWallpaper", "Changed Direction ! " + direction);
             }
             if (positionY < 0) {
                 positionY = 1;
@@ -212,7 +212,7 @@ public class Pony {
                 direction = direction % 360;
                 refreshImageDirection();
                 refreshGifDecoder();
-                Log.e("BornyLiveWallpaper", "Changed Direction ! " + direction);
+                CLog.v("BornyLiveWallpaper", "Changed Direction ! " + direction);
             }
             if (positionX > getScreen().width() - width) {
                 positionX = (getScreen().width() - width) - 1;
@@ -220,7 +220,7 @@ public class Pony {
                 direction = direction % 360;
                 refreshImageDirection();
                 refreshGifDecoder();
-                Log.e("BornyLiveWallpaper", "Changed Direction ! " + direction);
+                CLog.v("BornyLiveWallpaper", "Changed Direction ! " + direction);
             }
             if (positionX < 0) {
                 positionX = 1;
@@ -228,7 +228,7 @@ public class Pony {
                 direction = direction % 360;
                 refreshImageDirection();
                 refreshGifDecoder();
-                Log.e("BornyLiveWallpaper", "Changed Direction ! " + direction);
+                CLog.v("BornyLiveWallpaper", "Changed Direction ! " + direction);
             }
         }
     }
@@ -261,7 +261,7 @@ public class Pony {
 
     public Behaviour getRandomBehaviour() {
         Behaviour b = behaviours.get((int) (Math.random() * behaviours.size()));
-        Log.e("BronyLiveWallpaper", "Changing behaviour of " + name);
+        CLog.e("BronyLiveWallpaper", "Changing behaviour of " + name);
         return b;
     }
 

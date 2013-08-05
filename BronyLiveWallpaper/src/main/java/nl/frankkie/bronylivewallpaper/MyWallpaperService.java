@@ -1,5 +1,6 @@
 package nl.frankkie.bronylivewallpaper;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -7,13 +8,18 @@ import android.graphics.Color;
 import android.graphics.Movie;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.graphics.drawable.BitmapDrawable;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Handler;
 import android.service.wallpaper.WallpaperService;
+import android.util.DisplayMetrics;
+import android.util.Log;
+import android.view.Display;
+import android.view.Surface;
 import android.view.SurfaceHolder;
+import android.view.WindowManager;
 
-import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
@@ -26,18 +32,51 @@ public class MyWallpaperService extends WallpaperService {
     CopyOnWriteArrayList<Pony> ponies = new CopyOnWriteArrayList<Pony>();
     Paint paint;
     public static Rect screen = new Rect(0, 0, 240, 320); //smallest possible
+    public Context context;
+    public static MyEngine instance = null;
+    Bitmap backgroundImage;
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+    }
 
     @Override
     public Engine onCreateEngine() {
-        return new MyEngine();
+        context = this;
+        //
+        DisplayMetrics metrics = new DisplayMetrics();
+        Display display = ((WindowManager) getSystemService(WINDOW_SERVICE)).getDefaultDisplay();
+        display.getMetrics(metrics);
+        int rotation = display.getOrientation();
+        if (rotation == Surface.ROTATION_0 || rotation == Surface.ROTATION_180) { //vertical
+            screen = new Rect(0, 0, metrics.widthPixels, metrics.heightPixels);
+        } else {
+            screen = new Rect(0, 0, metrics.heightPixels, metrics.widthPixels);
+        }
+        //
+        if (instance != null) {
+            instance.killMe();
+            //kill old instance
+            instance = null;
+        }
+        instance = new MyEngine();
+        return instance;
     }
 
     public class MyEngine extends Engine {
+        public int gameLoopRunning = 0;
         long lastFpsTime = 0;
         int showFps = 0;
         int fps = 0;
         double showDelta = 0;
         Handler handler = new Handler();
+        float mOffset = 0;
         Runnable drawRunner = new Runnable() {
             @Override
             public void run() {
@@ -45,18 +84,66 @@ public class MyWallpaperService extends WallpaperService {
             }
         };
         boolean visible = true;
-        Bitmap backgroundImage;
 
         public MyEngine() {
             init();
         }
 
+        @Override
+        public void onCreate(SurfaceHolder surfaceHolder) {
+            super.onCreate(surfaceHolder);
+        }
+
+        @Override
+        public void onDestroy() {
+            super.onDestroy();
+            handler.removeCallbacks(drawRunner);
+        }
+
+        @Override
+        public void onSurfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+            super.onSurfaceChanged(holder, format, width, height);
+            screen = new Rect(0, 0, width, height);
+        }
+
+        @Override
+        public void onSurfaceCreated(SurfaceHolder holder) {
+            super.onSurfaceCreated(holder);
+        }
+
+        @Override
+        public void onSurfaceDestroyed(SurfaceHolder holder) {
+            super.onSurfaceDestroyed(holder);
+            visible = false;
+            handler.removeCallbacks(drawRunner);
+        }
+
+        float xOffsetStep;
+
+        @Override
+        public void onOffsetsChanged(float xOffset, float yOffset,
+                                     float xStep, float yStep, int xPixels, int yPixels) {
+            Log.e("LWP", "offsets: x" + xOffset + " y" + yOffset + " xs" + xStep + " ys" + yStep + " xp" + xPixels + " yp" + yPixels);
+            mOffset = xOffset;
+            xOffsetStep = xStep;
+            handler.post(drawRunner);
+        }
+
+        public void killMe() {
+            visible = false;
+        }
+
         public void init() {
+            new CLog(context, "BronyLiveWallpaper");
             ponies.clear();
             if (paint == null) {
                 paint = new Paint();
             }
-            backgroundImage = BitmapFactory.decodeResource(getResources(), R.drawable.background);
+
+            if (Build.VERSION.SDK_INT >= 15) {
+                setOffsetNotificationsEnabled(true);
+            }
+
             LoadPoniesTask task = new LoadPoniesTask();
             task.execute();
             //
@@ -85,6 +172,7 @@ public class MyWallpaperService extends WallpaperService {
         @Override
         public void onVisibilityChanged(boolean visible) {
             this.visible = visible;
+            CLog.e("Visibility: " + visible);
 //            if (visible) {
 //                handler.post(drawRunner);
 //            } else {
@@ -98,40 +186,77 @@ public class MyWallpaperService extends WallpaperService {
                     }
                 });
                 t.start();
+            } else {
+                handler.removeCallbacks(drawRunner);
             }
         }
 
         private void draw() {
-            SurfaceHolder surfaceHolder = getSurfaceHolder();
+            if (gameLoopRunning <= 0) {
+                if (visible) {
+                    Thread t = new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            gameLoop();
+                        }
+                    });
+                    t.start();
+                }
+            }
+            final SurfaceHolder surfaceHolder = getSurfaceHolder();
             Canvas canvas = null;
             try {
                 canvas = surfaceHolder.lockCanvas();
                 if (canvas != null) {
                     //Draw stuff
-                    screen = new Rect(0, 0, canvas.getWidth(), canvas.getHeight());
                     drawStuff(canvas);
+                } else {
+                    CLog.e("Canvas == null");
                 }
+            } catch (Exception e) {
+                e.printStackTrace();
+                try {
+                    surfaceHolder.unlockCanvasAndPost(canvas);
+                } catch (Exception ee) {
+                    e.printStackTrace();
+                }
+                //retry
+                handler.postDelayed(drawRunner, 10);
             } finally {
                 if (canvas != null) {
-                    surfaceHolder.unlockCanvasAndPost(canvas);
+                    try {
+                        surfaceHolder.unlockCanvasAndPost(canvas);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        //retry
+                        handler.postDelayed(drawRunner, 10);
+                    }
+                } else {
+                    CLog.e("Canvas == null !");
                 }
             }
-//            handler.removeCallbacks(drawRunner);
-//            if (visible) {
-//                handler.postDelayed(drawRunner, frameDelay);
-//            }
         }
 
         public void drawStuff(Canvas canvas) {
-            //paint.setColor(Color.BLACK);
-            //canvas.drawRect(0, 0, canvas.getWidth(), canvas.getHeight(), paint);
-            canvas.drawBitmap(backgroundImage, 0, 0, paint);
+            if (backgroundImage != null) {
+//                int numOfSteps = (int)(1/xOffsetStep )+1;
+//                int newWidth = screen.height() * (800 / 450);
+//                float x = map(mOffset, 0, 1, 1, 5) * (newWidth / numOfSteps);
+                canvas.drawBitmap(backgroundImage, 0, 0, paint);
+            } else {
+                paint.setColor(Color.BLACK);
+                canvas.drawRect(0, 0, canvas.getWidth(), canvas.getHeight(), paint);
+                paint.setColor(Color.WHITE);
+                paint.setTextSize(50);
+                paint.setFakeBoldText(true);
+                canvas.drawText("LOADING...", 50, 150, paint);
+//                firstFrame = false;
+                //return;
+            }
 
             if (ponies.size() == 0) {
-                paint.setColor(Color.BLACK);
-                paint.setTextSize(25f);
                 paint.setFakeBoldText(true);
-                canvas.drawText("Please Wait.. Loading Ponies...", 50, 50, paint);
+                canvas.drawText("Please Wait.. Loading Ponies...", 50, 210, paint);
             }
 
             for (Pony pony : ponies) {
@@ -143,7 +268,7 @@ public class MyWallpaperService extends WallpaperService {
             long lastLoopTime = System.nanoTime();
             final int TARGET_FPS = 30;
             final long OPTIMAL_TIME = 1000000000 / TARGET_FPS;
-
+            gameLoopRunning++;
             // keep looping round til the game ends
             while (visible) {
                 // work out how long its been since the last update, this
@@ -174,12 +299,7 @@ public class MyWallpaperService extends WallpaperService {
                 // draw everyting
                 //postInvalidate();
                 //render();
-                handler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        draw();
-                    }
-                });
+                handler.post(drawRunner);
 
 //            Runtime.getRuntime().gc();
 
@@ -194,6 +314,7 @@ public class MyWallpaperService extends WallpaperService {
                     //ignore
                 }
             }
+            gameLoopRunning--;
         }
 
         public void doGameUpdates(double delta) {
@@ -205,9 +326,23 @@ public class MyWallpaperService extends WallpaperService {
         public class LoadPoniesTask extends AsyncTask<Void, Void, Void> {
             @Override
             protected Void doInBackground(Void... voids) {
+                if (backgroundImage == null) {
+                    Bitmap image = BitmapFactory.decodeResource(getResources(), R.drawable.background);
+//                    int newWidth = screen.height() * (800 / 450);
+                    if (screen.width() > screen.height()) {
+                        backgroundImage = Bitmap.createScaledBitmap(image, screen.width(), screen.height(), true);
+                    } else {
+                        backgroundImage = Bitmap.createScaledBitmap(image, screen.height(), screen.width(), true);
+                    }
+                    Runtime.getRuntime().gc();
+                }
                 initPonies();
                 return null;
             }
+        }
+
+        float map(float x, float in_min, float in_max, float out_min, float out_max) {
+            return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
         }
     }
 
