@@ -237,12 +237,14 @@ public class MyWallpaperService extends WallpaperService {
             }
         }
 
+        Rect backgroundImageRect = new Rect(0,0,800,450);
         public void drawStuff(Canvas canvas) {
             if (backgroundImage != null) {
 //                int numOfSteps = (int)(1/xOffsetStep )+1;
 //                int newWidth = screen.height() * (800 / 450);
 //                float x = map(mOffset, 0, 1, 1, 5) * (newWidth / numOfSteps);
-                canvas.drawBitmap(backgroundImage, 0, 0, paint);
+                //canvas.drawBitmap(backgroundImage, 0, 0, paint);
+                canvas.drawBitmap(backgroundImage, null, screen,paint);
             } else {
                 paint.setColor(Color.BLACK);
                 canvas.drawRect(0, 0, canvas.getWidth(), canvas.getHeight(), paint);
@@ -329,11 +331,12 @@ public class MyWallpaperService extends WallpaperService {
                 if (backgroundImage == null) {
                     Bitmap image = BitmapFactory.decodeResource(getResources(), R.drawable.background);
 //                    int newWidth = screen.height() * (800 / 450);
-                    if (screen.width() > screen.height()) {
-                        backgroundImage = Bitmap.createScaledBitmap(image, screen.width(), screen.height(), true);
-                    } else {
-                        backgroundImage = Bitmap.createScaledBitmap(image, screen.height(), screen.width(), true);
-                    }
+//                    if (screen.width() > screen.height()) {
+//                        backgroundImage = Bitmap.createScaledBitmap(image, screen.width(), screen.height(), true);
+//                    } else {
+//                        backgroundImage = Bitmap.createScaledBitmap(image, screen.height(), screen.width(), true);
+//                    }
+                    backgroundImage = image;
                     Runtime.getRuntime().gc();
                 }
                 initPonies();
