@@ -1,6 +1,7 @@
 package nl.frankkie.bronylivewallpaper;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -12,6 +13,7 @@ import android.graphics.drawable.BitmapDrawable;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Handler;
+import android.preference.PreferenceManager;
 import android.service.wallpaper.WallpaperService;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -157,12 +159,31 @@ public class MyWallpaperService extends WallpaperService {
         }
 
         public void initPonies() {
-            initPony("Applejack");
-            initPony("Fluttershy");
-            initPony("Pinkie Pie");
-            initPony("Rainbow Dash");
-            initPony("Rarity");
-            initPony("Princess Twilight Sparkle");
+            ponies.clear();
+            //included ponies
+            try {
+                String[] list = getAssets().list("");
+                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(MyWallpaperService.this);
+                for (String s : list) {
+                    if (s.equals("images") || s.equals("kioskmode") || s.equals("sounds") || s.equals("webkit")) {
+                        continue;
+                    }
+                    //included ponies are default on
+                    if (prefs.getBoolean(s, true)) {
+                        initPony(s);
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            //Check external ponies
+
+//            initPony("Applejack");
+//            initPony("Fluttershy");
+//            initPony("Pinkie Pie");
+//            initPony("Rainbow Dash");
+//            initPony("Rarity");
+//            initPony("Princess Twilight Sparkle");
         }
 
         public void initPony(String name) {
@@ -237,14 +258,15 @@ public class MyWallpaperService extends WallpaperService {
             }
         }
 
-        Rect backgroundImageRect = new Rect(0,0,800,450);
+        Rect backgroundImageRect = new Rect(0, 0, 800, 450);
+
         public void drawStuff(Canvas canvas) {
             if (backgroundImage != null) {
 //                int numOfSteps = (int)(1/xOffsetStep )+1;
 //                int newWidth = screen.height() * (800 / 450);
 //                float x = map(mOffset, 0, 1, 1, 5) * (newWidth / numOfSteps);
                 //canvas.drawBitmap(backgroundImage, 0, 0, paint);
-                canvas.drawBitmap(backgroundImage, null, screen,paint);
+                canvas.drawBitmap(backgroundImage, null, screen, paint);
             } else {
                 paint.setColor(Color.BLACK);
                 canvas.drawRect(0, 0, canvas.getWidth(), canvas.getHeight(), paint);
