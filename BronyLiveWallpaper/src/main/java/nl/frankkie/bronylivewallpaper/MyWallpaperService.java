@@ -22,6 +22,7 @@ import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.WindowManager;
 
+import java.io.File;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
@@ -160,34 +161,39 @@ public class MyWallpaperService extends WallpaperService {
 
         public void initPonies() {
             ponies.clear();
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(MyWallpaperService.this);
             //included ponies
             try {
                 String[] list = getAssets().list("");
-                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(MyWallpaperService.this);
                 for (String s : list) {
                     if (s.equals("images") || s.equals("kioskmode") || s.equals("sounds") || s.equals("webkit")) {
                         continue;
                     }
                     //included ponies are default on
                     if (prefs.getBoolean(s, true)) {
-                        initPony(s);
+                        initPony(s, Util.LOCATION_ASSETS);
                     }
                 }
             } catch (Exception e) {
                 e.printStackTrace();
             }
             //Check external ponies
-
-//            initPony("Applejack");
-//            initPony("Fluttershy");
-//            initPony("Pinkie Pie");
-//            initPony("Rainbow Dash");
-//            initPony("Rarity");
-//            initPony("Princess Twilight Sparkle");
+            File folder = new File("/sdcard/Ponies");
+            if (folder.exists()){
+                String[] list = folder.list();
+                for (final String s : list) {
+                    if (s.equalsIgnoreCase("interactions.ini")){
+                        continue;
+                    }
+                    if (prefs.getBoolean(s, false)){
+                        initPony(s, Util.LOCATION_SDCARD);
+                    }
+                }
+            }
         }
 
-        public void initPony(String name) {
-            ponies.add(new Pony(MyWallpaperService.this, name));
+        public void initPony(String name, String location) {
+            ponies.add(new Pony(MyWallpaperService.this, name, location));
         }
 
         @Override

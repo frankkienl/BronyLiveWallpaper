@@ -1,20 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
 
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:orientation="horizontal"
-              android:layout_width="match_parent"
-              android:layout_height="match_parent">
-<CheckBox
-        android:id="@+id/settings_row_cb"
-        android:layout_width="wrap_content"
-        android:layout_height="match_parent"
-        />
-    <TextView
-            android:id="@+id/settings_row_tv"
-            android:text="@string/app_name"
+    <ImageView
+            android:id="@+id/settings_row_pic"
+            android:src="@drawable/ic_launcher"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
             android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:textSize="22sp"
-            android:gravity="center_vertical"
-            />
-</LinearLayout>
+            android:adjustViewBounds="true"
+            android:layout_height="match_parent"/>
+
+    <LinearLayout android:id="@+id/settings_row_part1"
+                  android:layout_toLeftOf="@id/settings_row_pic"
+            android:orientation="horizontal"
+                  android:layout_width="match_parent"
+                  android:layout_height="match_parent">
+
+        <CheckBox
+                android:id="@+id/settings_row_cb"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                />
+
+        <TextView
+                android:id="@+id/settings_row_tv"
+                android:text="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:textSize="22sp"
+                android:gravity="center_vertical"
+                />
+
+    </LinearLayout>
+
+
+
+</RelativeLayout>

@@ -5,6 +5,9 @@ package nl.frankkie.bronylivewallpaper;
  */
 public class Util {
 
+    public static final String LOCATION_ASSETS = "assets";
+    public static final String LOCATION_SDCARD = "/sdcard/Ponies/";
+
     public static float pointDirection(float x1, float y1, float x2, float y2) {
         //http://wiki.yoyogames.com/index.php/Point_direction
         //radtodeg(arctan2(y1-y2,x2-x1));

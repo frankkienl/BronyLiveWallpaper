@@ -10,9 +10,7 @@ import android.graphics.Paint;
 import android.graphics.Rect;
 import android.util.Log;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -54,9 +52,12 @@ public class Pony {
     Bitmap currentFrameBitmap = null;
     int currentFrameInt = 0;
 
-    public Pony(Context context, String name) {
+    String fileLocation = Util.LOCATION_ASSETS;
+
+    public Pony(Context context, String name, String fileLocation) {
         this.name = name;
         this.context = context;
+        this.fileLocation = fileLocation;
         init();
     }
 
@@ -130,7 +131,7 @@ public class Pony {
         gifDecoder = null;
     }
 
-    public void refreshImageDirection(){
+    public void refreshImageDirection() {
         if (direction > DIR_UP && direction < DIR_DOWN) { //right
             imageRight = false;
         } else {
@@ -140,18 +141,33 @@ public class Pony {
 
     public void init() {
         behaviours.clear();
-        AssetManager assets = context.getAssets();
-        try {
-            InputStream inputStream = assets.open(name + "/pony.ini");
-            CSVReader reader = new CSVReader(new InputStreamReader(inputStream));
-            String[] nextLine;
-            while ((nextLine = reader.readNext()) != null) {
-                if (nextLine[0].equalsIgnoreCase("behavior")) {
-                    behaviours.add(new Behaviour(nextLine));
+        if (fileLocation.equalsIgnoreCase(Util.LOCATION_ASSETS)) {
+            AssetManager assets = context.getAssets();
+            try {
+                InputStream inputStream = assets.open(name + "/pony.ini");
+                CSVReader reader = new CSVReader(new InputStreamReader(inputStream));
+                String[] nextLine;
+                while ((nextLine = reader.readNext()) != null) {
+                    if (nextLine[0].equalsIgnoreCase("behavior")) {
+                        behaviours.add(new Behaviour(nextLine));
+                    }
                 }
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-        } catch (IOException e) {
-            e.printStackTrace();
+        } else if (fileLocation.equalsIgnoreCase(Util.LOCATION_SDCARD)) {
+            try {
+                InputStream inputStream = new FileInputStream(new File("/sdcard/Ponies/" + name + "/pony.ini"));
+                CSVReader reader = new CSVReader(new InputStreamReader(inputStream));
+                String[] nextLine;
+                while ((nextLine = reader.readNext()) != null) {
+                    if (nextLine[0].equalsIgnoreCase("behavior")) {
+                        behaviours.add(new Behaviour(nextLine));
+                    }
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
         //
         CLog.v("BronyLiveWallpaper", "Loaded " + name);
@@ -246,13 +262,31 @@ public class Pony {
         try {
             gifDecoder = new GifDecoder();
             if (imageRight) {
-                gifDecoder.read(context.getAssets().open(name + "/" + currentBehaviour.imageRight));
+                gifDecoder.read(getImageStream(name + "/" + currentBehaviour.imageRight));
             } else {
-                gifDecoder.read(context.getAssets().open(name + "/" + currentBehaviour.imageLeft));
+                gifDecoder.read(getImageStream(name + "/" + currentBehaviour.imageLeft));
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    /**
+     * name + "/" + currentBehaviour.imageRight
+     *
+     * @return
+     */
+    public InputStream getImageStream(String which) {
+        try {
+            if (fileLocation.equalsIgnoreCase(Util.LOCATION_ASSETS)) {
+                return context.getAssets().open(which);
+            } else if (fileLocation.equalsIgnoreCase(Util.LOCATION_SDCARD)) {
+                return new FileInputStream(new File("/sdcard/Ponies/" + which));
+            }
+        } catch (Exception e) {
+
+        }
+        return null;
     }
 
     /**
@@ -289,6 +323,7 @@ public class Pony {
      * @param canvas
      * @param paint
      */
+    @Deprecated
     public void drawTemp(Canvas canvas, Paint paint) {
         long now = android.os.SystemClock.uptimeMillis();
         if (mMovieStart == 0) {   // first time
