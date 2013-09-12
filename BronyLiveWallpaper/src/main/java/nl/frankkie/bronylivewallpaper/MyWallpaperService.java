@@ -2,16 +2,10 @@ package nl.frankkie.bronylivewallpaper;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Movie;
-import android.graphics.Paint;
-import android.graphics.Rect;
-import android.graphics.drawable.BitmapDrawable;
+import android.graphics.*;
 import android.os.AsyncTask;
 import android.os.Build;
+import android.os.Environment;
 import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.service.wallpaper.WallpaperService;
@@ -92,6 +86,23 @@ public class MyWallpaperService extends WallpaperService {
             init();
         }
 
+        public CopyOnWriteArrayList<Pony> getPonies() {
+            return ponies;
+        }
+
+        public void deInitPony(String name) {
+            Pony removeMe = null;
+            for (Pony p : ponies) {
+                if (p.name.equalsIgnoreCase(name)) {
+                    removeMe = p;
+                    break;
+                }
+            }
+            if (removeMe != null) {
+                ponies.remove(removeMe);
+            }
+        }
+
         @Override
         public void onCreate(SurfaceHolder surfaceHolder) {
             super.onCreate(surfaceHolder);
@@ -170,7 +181,7 @@ public class MyWallpaperService extends WallpaperService {
                         continue;
                     }
                     //included ponies are default on
-                    if (prefs.getBoolean(s, true)) {
+                    if (prefs.getBoolean(s, Util.isInMane6(s))) {
                         initPony(s, Util.LOCATION_ASSETS);
                     }
                 }
@@ -178,14 +189,14 @@ public class MyWallpaperService extends WallpaperService {
                 e.printStackTrace();
             }
             //Check external ponies
-            File folder = new File("/sdcard/Ponies");
-            if (folder.exists()){
+            File folder = new File(Environment.getExternalStorageDirectory().getPath() + "Ponies");
+            if (folder.exists()) {
                 String[] list = folder.list();
                 for (final String s : list) {
-                    if (s.equalsIgnoreCase("interactions.ini")){
+                    if (s.equalsIgnoreCase("interactions.ini")) {
                         continue;
                     }
-                    if (prefs.getBoolean(s, false)){
+                    if (prefs.getBoolean(s, false)) {
                         initPony(s, Util.LOCATION_SDCARD);
                     }
                 }
@@ -193,6 +204,12 @@ public class MyWallpaperService extends WallpaperService {
         }
 
         public void initPony(String name, String location) {
+            for (Pony p : ponies) {
+                if (p.name.equalsIgnoreCase(name)) {
+                    //already added!
+                    return;
+                }
+            }
             ponies.add(new Pony(MyWallpaperService.this, name, location));
         }
 

@@ -10,14 +10,10 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
-        <Button
-                android:text="I want more ponies !"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:id="@+id/btn_want_more"/>
-
         <TextView
-                android:text="Select ponies"
+                android:id="@+id/settings_note"
+                android:autoLink="all"
+                android:text="Select ponies to show\nNOTE: Don't select too many ponies at once or the Live Wallpaper WILL CRASH! This depends on the device.\nPlease visit http://frankkie.nl/android/"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"/>
     </LinearLayout>

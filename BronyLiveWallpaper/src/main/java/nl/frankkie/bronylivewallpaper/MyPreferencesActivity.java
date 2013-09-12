@@ -1,15 +1,14 @@
 package nl.frankkie.bronylivewallpaper;
 
-import android.app.Activity;
 import android.app.ListActivity;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
+import android.graphics.Color;
 import android.graphics.drawable.Drawable;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -46,41 +45,7 @@ public class MyPreferencesActivity extends ListActivity {
         assetManager = getAssets();
         prefs = PreferenceManager.getDefaultSharedPreferences(this);
         findViewById(android.R.id.empty).setVisibility(View.VISIBLE);
-        if (isAppInstalled("nl.frankkie.bronylivewallpaperaddon")) {
-            findViewById(R.id.btn_want_more).setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    Intent intent = new Intent();
-                    intent.setAction("nl.frankkie.bronylivewallpaperaddon.MAIN");
-                    intent.addCategory("android.intent.category.DEFAULT");
-                    try {
-                        startActivity(intent);
-                    } catch (Exception e) {
-                        Toast.makeText(MyPreferencesActivity.this, "Cannot start Addon Package..\nI'll try starting Google Play instead", Toast.LENGTH_LONG).show();
-                        Intent intent2 = new Intent();
-                        intent2.setData(Uri.parse("market://details?id=nl.frankkie.bronylivewallpaperaddon"));
-                        try {
-                            startActivity(intent2);
-                        } catch (Exception e2) {
-                            Toast.makeText(MyPreferencesActivity.this, "Cannot start Google Play\nTry searching for: 'Brony Live Wallpaper Addon' on Google Play", Toast.LENGTH_LONG).show();
-                        }
-                    }
-                }
-            });
-        } else {
-            findViewById(R.id.btn_want_more).setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    Intent intent = new Intent();
-                    intent.setData(Uri.parse("market://details?id=nl.frankkie.bronylivewallpaperaddon"));
-                    try {
-                        startActivity(intent);
-                    } catch (Exception e) {
-                        Toast.makeText(MyPreferencesActivity.this, "Cannot start Google Play\nTry searching for: 'Brony Live Wallpaper Addon' on Google Play", Toast.LENGTH_LONG).show();
-                    }
-                }
-            });
-        }
+        ((TextView) findViewById(R.id.settings_note)).setTextColor(Color.BLACK);
         initPonySettings();
     }
 
@@ -120,11 +85,11 @@ public class MyPreferencesActivity extends ListActivity {
             }
             //Get Ponies in Addon
             //TODO: ponies in Addon
-            File folder = new File("/sdcard/Ponies");
-            if (folder.exists()){
+            File folder = new File(Environment.getExternalStorageDirectory().getPath() + "Ponies");
+            if (folder.exists()) {
                 String[] list = folder.list();
                 for (final String s : list) {
-                    if (s.equalsIgnoreCase("interactions.ini")){
+                    if (s.equalsIgnoreCase("interactions.ini")) {
                         continue;
                     }
                     ponySettings.add(new PonySetting(s, Util.LOCATION_SDCARD));
@@ -170,52 +135,101 @@ public class MyPreferencesActivity extends ListActivity {
                 @Override
                 public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
                     prefs.edit().putBoolean(ponySetting.name, b).commit();
-                    reinitPonies();
+                    //reinitPonies();
+                    reinitPony(ponySetting.name, ponySetting.location, b);
                 }
             });
             //default = (isAsset);
-            cb.setChecked(prefs.getBoolean(ponySetting.name, ponySetting.location.equalsIgnoreCase(Util.LOCATION_ASSETS)));
+            //DefaultOn when inMane6 && not external
+            boolean defaultOn = Util.isInMane6(ponySetting.name) && ponySetting.location.equalsIgnoreCase(Util.LOCATION_ASSETS);
+            cb.setChecked(prefs.getBoolean(ponySetting.name, defaultOn));
             TextView tv = (TextView) convertView.findViewById(R.id.settings_row_tv);
+            tv.setTextColor(Color.BLACK);
             tv.setText(ponySetting.name);
 
-            if (ponySetting.location.equals(Util.LOCATION_ASSETS)) {
-                try {
-                    InputStream inputStream = assetManager.open(ponySetting.name + "/pony.ini");
-                    CSVReader reader = new CSVReader(new InputStreamReader(inputStream));
-                    String[] nextLine;
-                    while ((nextLine = reader.readNext()) != null) {
-                        if (nextLine[0].equalsIgnoreCase("behavior")) {
-//                            behaviours.add(new Behaviour(nextLine));
-                            if (nextLine[1].equalsIgnoreCase("stand")){
-                                String imageName = nextLine[7];
-                                Drawable d = Drawable.createFromStream(getAssets().open(ponySetting.name + "/" + imageName), null);
-                                ((ImageView)convertView.findViewById(R.id.settings_row_pic)).setImageDrawable(d);
-                            }
-                        }
-                    }
-                } catch (Exception e) {
-                    //ignore, no pic for you
+            //RESET IMAGE
+            ((ImageView) convertView.findViewById(R.id.settings_row_pic)).setImageResource(R.drawable.ic_launcher);
+            //
+            InputStream inputStream = null;
+            try {
+                if (ponySetting.location.equals(Util.LOCATION_ASSETS)) {
+                    inputStream = assetManager.open(ponySetting.name + "/pony.ini");
+                } else if (ponySetting.location.equalsIgnoreCase(Util.LOCATION_SDCARD)) {
+                    inputStream = new FileInputStream(new File(Environment.getExternalStorageDirectory().getPath() + "Ponies/" + ponySetting.name + "/pony.ini"));
                 }
-            } else if (ponySetting.location.equalsIgnoreCase(Util.LOCATION_SDCARD)){
-                try {
-                    InputStream inputStream = new FileInputStream(new File("/sdcard/Ponies/" + ponySetting.name + "/pony.ini"));
-                    CSVReader reader = new CSVReader(new InputStreamReader(inputStream));
-                    String[] nextLine;
-                    while ((nextLine = reader.readNext()) != null) {
-                        if (nextLine[0].equalsIgnoreCase("behavior")) {
+                CSVReader reader = new CSVReader(new InputStreamReader(inputStream));
+                String[] nextLine;
+                    /*
+                    Not all ponies have behaviours name stand, idle or walk
+                    So we use A behavior as last resort.
+                     */
+                String[] lastResort = null;
+                while ((nextLine = reader.readNext()) != null) {
+                    if (nextLine[0].equalsIgnoreCase("behavior")) {
 //                            behaviours.add(new Behaviour(nextLine));
-                            if (nextLine[1].equalsIgnoreCase("stand")){
-                                String imageName = nextLine[7];
-                                Drawable d = Drawable.createFromStream(new FileInputStream(new File("/sdcard/Ponies/" +ponySetting.name + "/" + imageName)),null);
-                                ((ImageView)convertView.findViewById(R.id.settings_row_pic)).setImageDrawable(d);
+                        lastResort = nextLine;
+                        if (nextLine[1].equalsIgnoreCase("stand") || nextLine[1].equalsIgnoreCase("idle") || nextLine[1].equalsIgnoreCase("walk")) {
+                            String imageName = nextLine[7];
+                            LoadImageAsyncTask task = new LoadImageAsyncTask();
+                            if (ponySetting.location.equals(Util.LOCATION_ASSETS)) {
+                                task.filename = ponySetting.name + "/" + imageName;
+                            } else if (ponySetting.location.equalsIgnoreCase(Util.LOCATION_SDCARD)) {
+                                task.filename = Environment.getExternalStorageDirectory().getPath() + "Ponies/" + ponySetting.name + "/" + imageName;
                             }
+                            task.external = false;
+                            task.imageView = ((ImageView) convertView.findViewById(R.id.settings_row_pic));
+                            task.execute();
+                            lastResort = null; //remove, images has been found
+                            break;
                         }
                     }
-                } catch (Exception e) {
-                    //ignore, no pic for you
+                }
+                if (lastResort != null) {
+                    String imageName = lastResort[7];
+                    LoadImageAsyncTask task = new LoadImageAsyncTask();
+                    task.filename = ponySetting.name + "/" + imageName;
+                    task.external = false;
+                    task.imageView = ((ImageView) convertView.findViewById(R.id.settings_row_pic));
+                    task.execute();
+                }
+            } catch (Exception e) {
+                //ignore, no pic for you
+            }
+
+            return convertView;
+        }
+    }
+
+    public class LoadImageAsyncTask extends AsyncTask<Void, Void, Drawable> {
+
+        public ImageView imageView;
+        public String filename;
+        public boolean external;
+
+        @Override
+        protected Drawable doInBackground(Void... voidz) {
+            Drawable d;
+            try {
+                if (external) {
+                    d = Drawable.createFromStream(new FileInputStream(new File(filename)), null);
+                } else {
+                    d = Drawable.createFromStream(getAssets().open(filename), null);
+                }
+                return d;
+            } catch (Exception e) {
+                return null;
+            }
+        }
+
+        @Override
+        protected void onPostExecute(Drawable drawable) {
+            if (imageView != null) {
+                if (drawable != null) {
+                    imageView.setImageDrawable(drawable);
+                } else {
+                    imageView.setImageResource(R.drawable.ic_launcher);
                 }
             }
-            return convertView;
         }
     }
 
@@ -262,9 +276,22 @@ public class MyPreferencesActivity extends ListActivity {
     }
     */
 
+    /**
+     * Dont waste CPU Cycles
+     * by reloading ALL ponies
+     */
+    @Deprecated
     public void reinitPonies() {
         if (MyWallpaperService.instance != null) {
             MyWallpaperService.instance.initPonies();
+        }
+    }
+
+    public void reinitPony(String name, String location, boolean init) {
+        if (init) {
+            MyWallpaperService.instance.initPony(name, location);
+        } else {
+            MyWallpaperService.instance.deInitPony(name);
         }
     }
 }

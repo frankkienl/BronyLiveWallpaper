@@ -19,4 +19,14 @@ public class Util {
         //dist=sqrt((x2-x1)*(x2-x1)+(y2-y1)*(y2-y1))
         return (float) Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
     }
+
+    public static boolean isInMane6(String ponyName){
+        String[] mane6 = new String[]{"Applejack", "Rainbow Dash", "Fluttershy", "Rarity", "Pinkie Pie", "Princess Twilight Sparkle"};
+        for (String name : mane6){
+            if (ponyName.equalsIgnoreCase(name)){
+                return true;
+            }
+        }
+        return false;
+    }
 }

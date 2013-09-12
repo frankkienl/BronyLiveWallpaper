@@ -2,20 +2,14 @@ package nl.frankkie.bronylivewallpaper;
 
 import android.content.Context;
 import android.content.res.AssetManager;
-import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Movie;
-import android.graphics.Paint;
-import android.graphics.Rect;
-import android.util.Log;
+import android.graphics.*;
+import android.os.Environment;
+import au.com.bytecode.opencsv.CSVReader;
+import jp.tomorrowkey.android.gifplayer.GifDecoder;
 
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Random;
-
-import au.com.bytecode.opencsv.CSVReader;
-import jp.tomorrowkey.android.gifplayer.GifDecoder;
 
 /**
  * Created by FrankkieNL on 31-7-13.
@@ -157,7 +151,8 @@ public class Pony {
             }
         } else if (fileLocation.equalsIgnoreCase(Util.LOCATION_SDCARD)) {
             try {
-                InputStream inputStream = new FileInputStream(new File("/sdcard/Ponies/" + name + "/pony.ini"));
+                InputStream inputStream = new FileInputStream(new File(Environment.getExternalStorageDirectory().getPath()
+                        + "Ponies/" + name + "/pony.ini"));
                 CSVReader reader = new CSVReader(new InputStreamReader(inputStream));
                 String[] nextLine;
                 while ((nextLine = reader.readNext()) != null) {
@@ -295,7 +290,7 @@ public class Pony {
 
     public Behaviour getRandomBehaviour() {
         Behaviour b = behaviours.get((int) (Math.random() * behaviours.size()));
-        CLog.e("BronyLiveWallpaper", "Changing behaviour of " + name);
+        CLog.v("BronyLiveWallpaper", "Changing behaviour of " + name);
         return b;
     }
 
