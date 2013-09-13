@@ -288,10 +288,12 @@ public class MyPreferencesActivity extends ListActivity {
     }
 
     public void reinitPony(String name, String location, boolean init) {
-        if (init) {
-            MyWallpaperService.instance.initPony(name, location);
-        } else {
-            MyWallpaperService.instance.deInitPony(name);
+        if (MyWallpaperService.instance != null) {
+            if (init) {
+                MyWallpaperService.instance.initPony(name, location);
+            } else {
+                MyWallpaperService.instance.deInitPony(name);
+            }
         }
     }
 }
