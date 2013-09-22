@@ -3,6 +3,7 @@ package nl.frankkie.bronylivewallpaper;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.*;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Environment;
@@ -17,6 +18,8 @@ import android.view.SurfaceHolder;
 import android.view.WindowManager;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
@@ -213,6 +216,31 @@ public class MyWallpaperService extends WallpaperService {
             ponies.add(new Pony(MyWallpaperService.this, name, location));
         }
 
+        public void loadBackground(){
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(MyWallpaperService.this);
+            try {
+                String uriString = prefs.getString("backgroundImage", "null");
+                Uri selectedImage = Uri.parse(uriString);
+                if (uriString.startsWith("content")) {
+                    InputStream imageStream = getContentResolver().openInputStream(selectedImage);
+                    Bitmap yourSelectedImage = BitmapFactory.decodeStream(imageStream);
+                    backgroundImage = yourSelectedImage;
+                } else if (uriString.startsWith("file")){
+                    InputStream imageStream = new FileInputStream(new File(selectedImage.toString().replace("file://", "")));
+                    Bitmap yourSelectedImage = BitmapFactory.decodeStream(imageStream);
+                    backgroundImage = yourSelectedImage;
+                } else {
+                    Bitmap image = BitmapFactory.decodeResource(getResources(), R.drawable.background);
+                    backgroundImage = image;
+                }
+            } catch (Exception e) {
+                //Fallback, default image
+                Bitmap image = BitmapFactory.decodeResource(getResources(), R.drawable.background);
+                backgroundImage = image;
+            }
+            Runtime.getRuntime().gc();
+        }
+
         @Override
         public void onVisibilityChanged(boolean visible) {
             this.visible = visible;
@@ -374,15 +402,7 @@ public class MyWallpaperService extends WallpaperService {
             @Override
             protected Void doInBackground(Void... voids) {
                 if (backgroundImage == null) {
-                    Bitmap image = BitmapFactory.decodeResource(getResources(), R.drawable.background);
-//                    int newWidth = screen.height() * (800 / 450);
-//                    if (screen.width() > screen.height()) {
-//                        backgroundImage = Bitmap.createScaledBitmap(image, screen.width(), screen.height(), true);
-//                    } else {
-//                        backgroundImage = Bitmap.createScaledBitmap(image, screen.height(), screen.width(), true);
-//                    }
-                    backgroundImage = image;
-                    Runtime.getRuntime().gc();
+                    loadBackground();
                 }
                 initPonies();
                 return null;
@@ -395,3 +415,15 @@ public class MyWallpaperService extends WallpaperService {
     }
 
 }
+
+/*
+Bitmap image = BitmapFactory.decodeResource(getResources(), R.drawable.background);
+                        backgroundImage = image;
+                        Runtime.getRuntime().gc();
+//                    int newWidth = screen.height() * (800 / 450);
+//                    if (screen.width() > screen.height()) {
+//                        backgroundImage = Bitmap.createScaledBitmap(image, screen.width(), screen.height(), true);
+//                    } else {
+//                        backgroundImage = Bitmap.createScaledBitmap(image, screen.height(), screen.width(), true);
+//                    }
+ */

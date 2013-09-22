@@ -1,6 +1,7 @@
 package nl.frankkie.bronylivewallpaper;
 
 import android.app.ListActivity;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
@@ -46,7 +47,30 @@ public class MyPreferencesActivity extends ListActivity {
         prefs = PreferenceManager.getDefaultSharedPreferences(this);
         findViewById(android.R.id.empty).setVisibility(View.VISIBLE);
         ((TextView) findViewById(R.id.settings_note)).setTextColor(Color.BLACK);
+        findViewById(R.id.settings_backgroundimage).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent();
+                //intent.setAction(Intent.ACTION_PICK);
+                intent.setAction(Intent.ACTION_GET_CONTENT);
+                intent.setType("image/*");
+                //http://stackoverflow.com/questions/2507898/how-to-pick-an-image-from-gallery-sd-card-for-my-app-in-android
+                startActivityForResult(intent, 2507898);
+            }
+        });
         initPonySettings();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == 2507898) {
+            if (resultCode == RESULT_OK) {
+                prefs.edit().putString("backgroundImage", data.getDataString()).commit();
+            } else {
+                prefs.edit().putString("backgroundImage", "null").commit();
+            }
+            reinitBackground();
+        }
     }
 
     private boolean isAppInstalled(String uri) {
@@ -294,6 +318,12 @@ public class MyPreferencesActivity extends ListActivity {
             } else {
                 MyWallpaperService.instance.deInitPony(name);
             }
+        }
+    }
+
+    public void reinitBackground() {
+        if (MyWallpaperService.instance != null) {
+            MyWallpaperService.instance.loadBackground();
         }
     }
 }

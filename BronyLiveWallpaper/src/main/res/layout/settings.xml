@@ -16,6 +16,11 @@
                 android:text="Select ponies to show\nNOTE: Don't select too many ponies at once or the Live Wallpaper WILL CRASH! This depends on the device.\nPlease visit http://frankkie.nl/android/"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"/>
+        <Button
+                android:id="@+id/settings_backgroundimage"
+                android:text="Change background image"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"/>
     </LinearLayout>
     <ListView
             android:id="@android:id/list"
