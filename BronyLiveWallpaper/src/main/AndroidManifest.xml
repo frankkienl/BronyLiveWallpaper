@@ -5,8 +5,9 @@ http://austiniousi.deviantart.com/art/Ponyville-Background-324408425
 //-->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
           package="nl.frankkie.bronylivewallpaper"
-          android:versionCode="7"
-          android:versionName="1.2">
+          android:versionCode="8"
+          android:installLocation="auto"
+          android:versionName="1.2.1">
 
 
     <uses-sdk
@@ -19,6 +20,7 @@ http://austiniousi.deviantart.com/art/Ponyville-Background-324408425
 
     <application
             android:allowBackup="true"
+            android:debuggable="false"
             android:theme="@style/AppTheme"
             android:label="@string/app_name"
             android:icon="@drawable/ic_launcher">
@@ -48,6 +50,19 @@ http://austiniousi.deviantart.com/art/Ponyville-Background-324408425
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+
+        <!-- TODO: REMOVE
+        <activity
+                android:name=".PngTestActivity"
+                android:exported="true"
+                android:label="TEST ME">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
+        //-->
 
     </application>
 

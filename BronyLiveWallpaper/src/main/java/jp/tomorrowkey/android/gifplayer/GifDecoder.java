@@ -1,10 +1,10 @@
 package jp.tomorrowkey.android.gifplayer;
 
-import java.io.InputStream;
-import java.util.Vector;
-
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
+
+import java.io.InputStream;
+import java.util.Vector;
 
 public class GifDecoder {
     /**
@@ -19,7 +19,9 @@ public class GifDecoder {
      * File read status: Unable to open source.
      */
     public static final int STATUS_OPEN_ERROR = 2;
-    /** max decoder pixel stack size */
+    /**
+     * max decoder pixel stack size
+     */
     protected static final int MAX_STACK_SIZE = 4096;
     protected InputStream in;
     protected int status;
@@ -70,8 +72,7 @@ public class GifDecoder {
     /**
      * Gets display duration for specified frame.
      *
-     * @param n
-     *          int index of frame
+     * @param n int index of frame
      * @return delay in milliseconds
      */
     public int getDelay(int n) {
@@ -205,14 +206,27 @@ public class GifDecoder {
         if (frameCount <= 0)
             return null;
         n = n % frameCount;
-        return ((GifFrame) frames.elementAt(n)).image;
+        try {
+            /*
+            Trying to fix this error:
+            java.lang.ArrayIndexOutOfBoundsException: length=0; index=0
+            at java.util.Vector.arrayIndexOutOfBoundsException(Vector.java:907)
+            at java.util.Vector.elementAt(Vector.java:328)
+            at jp.tomorrowkey.android.gifplayer.GifDecoder.getFrame(GifDecoder.java:208)
+            at nl.frankkie.bronylivewallpaper.Pony.updateTick(Pony.java:196)
+             */
+            Bitmap toReturn = ((GifFrame) frames.elementAt(n)).image;
+            return toReturn;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     /**
      * Reads GIF image from stream
      *
-     * @param is
-     *          containing GIF file.
+     * @param is containing GIF file.
      * @return read status code (0 = no errors)
      */
     public int read(InputStream is) {
@@ -270,7 +284,7 @@ public class GifDecoder {
         }
         // Decode GIF pixel stream.
         datum = bits = count = first = top = pi = bi = 0;
-        for (i = 0; i < npix;) {
+        for (i = 0; i < npix; ) {
             if (top == 0) {
                 if (bits < code_size) {
                     // Load bytes until there are enough bits for a code.
@@ -406,8 +420,7 @@ public class GifDecoder {
     /**
      * Reads color table as 256 RGB integer values
      *
-     * @param ncolors
-     *          int number of colors to read
+     * @param ncolors int number of colors to read
      * @return int array containing 256 colors (packed ARGB with full alpha)
      */
     protected int[] readColorTable(int ncolors) {

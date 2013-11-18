@@ -38,6 +38,7 @@ public class MyWallpaperService extends WallpaperService {
 
     @Override
     public void onCreate() {
+        CLog.setShouldLogByDebuggable(this);
         super.onCreate();
     }
 
