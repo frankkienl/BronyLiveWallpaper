@@ -35,3 +35,10 @@ Sourceforge: http://opencsv.sourceforge.net/
 Programming for Android:
 
 FrankkieNL: https://github.com/frankkienl/
+
+Licence
+=======
+
+Apache V2
+
+http://apache.org/licenses/LICENSE-2.0.html

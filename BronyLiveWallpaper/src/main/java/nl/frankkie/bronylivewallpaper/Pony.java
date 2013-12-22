@@ -1,3 +1,18 @@
+/*
+ * Copyright (C) 2013 FrankkieNL
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package nl.frankkie.bronylivewallpaper;
 
 import android.content.Context;
@@ -311,32 +326,6 @@ public class Pony {
 
     Movie mMovie;
     long mMovieStart = 0;
-
-    /**
-     * Will be replaced by better method soon(tm)
-     *
-     * @param canvas
-     * @param paint
-     */
-    @Deprecated
-    public void drawTemp(Canvas canvas, Paint paint) {
-        long now = android.os.SystemClock.uptimeMillis();
-        if (mMovieStart == 0) {   // first time
-            mMovieStart = now;
-        }
-        if (mMovie != null) {
-            int dur = mMovie.duration();
-            if (dur == 0) {
-                dur = 600;
-            }
-            int relTime = (int) ((now - mMovieStart) % dur);
-            mMovie.setTime(relTime);
-            mMovie.draw(canvas, positionX, positionY);
-        } else {
-            InputStream is = context.getResources().openRawResource(R.raw.aj_gallop_right);
-            mMovie = Movie.decodeStream(is);
-        }
-    }
 
     public class Behaviour {
 

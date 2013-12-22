@@ -1,3 +1,18 @@
+/*
+ * Copyright (C) 2013 FrankkieNL
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package nl.frankkie.bronylivewallpaper;
 
 import android.app.ListActivity;
@@ -7,13 +22,12 @@ import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.preference.PreferenceManager;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
+import android.view.*;
 import android.widget.*;
 import au.com.bytecode.opencsv.CSVReader;
 
@@ -325,5 +339,45 @@ public class MyPreferencesActivity extends ListActivity {
         if (MyWallpaperService.instance != null) {
             MyWallpaperService.instance.loadBackground();
         }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        menu.add(0,0,0,getString(R.string.credits));
+        menu.add(0,1,0,getString(R.string.website));
+        return true;
+//        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        switch (id){
+            case 0: {
+                showCredits();
+                return true;
+            }
+            case 1: {
+                showWebsite();
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public void showCredits(){
+        Intent i = new Intent();
+        i.setClass(this, CreditsActivity.class);
+        startActivity(i);
+    }
+
+    public void showWebsite(){
+        Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse("http://frankkie.nl/"));
+        try {
+            startActivity(i);
+        } catch (Exception e){
+            Toast.makeText(this,"Browser could not be started.\nPlease go to:\nwww.frankkie.nl",Toast.LENGTH_LONG).show();
+        }
+
     }
 }
