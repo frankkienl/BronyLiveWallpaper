@@ -18,7 +18,11 @@ Idea and Pony-images are taken from:
 
 Desktop Ponies: http://desktopponies.bugs3.com/
 
+https://docs.google.com/document/d/1dJp8_k0mNvydyUQbLIeRiH4HJCvAClhU0tlBHlLDvVI/edit
+
 (http://www.equestriadaily.com/2012/12/desktop-ponies-piles-of-updates.html)
+
+
 
 Background image:
 
