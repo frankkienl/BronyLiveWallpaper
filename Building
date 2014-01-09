@@ -1,5 +1,7 @@
-This application is made with Android Studio. (version 0.2.9)
+This application is made with Android Studio.
+<strike>(version 0.2.9)</strike> (version 0.4.2)
 Therefor this app should be build using Gradle.
+(Gradle 1.9)
 
 The source from the GifDecoder is included with the source from the application itself.
 This is because the source has been modified.
@@ -8,7 +10,6 @@ The app also uses the OpenCSV library. The jar is included in the libs-folder.
 Make sure the following is present in your gradle file:
 dependencies {
     compile files ('libs/opencsv-2.3.jar')
-    compile 'com.android.support:support-v4:13.0.+'
 }
 
 Good luck building this app !

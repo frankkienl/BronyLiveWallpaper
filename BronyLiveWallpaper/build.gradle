@@ -1,28 +1,26 @@
-buildscript {
-    repositories {
-        mavenCentral()
-    }
-    dependencies {
-        classpath 'com.android.tools.build:gradle:0.5.+'
-    }
-}
 apply plugin: 'android'
 
-repositories {
-    mavenCentral()
+android {
+    compileSdkVersion 19
+    buildToolsVersion "19.0.0"
+
+    defaultConfig {
+        minSdkVersion 7
+        targetSdkVersion 19
+		versionCode 9
+		versionName "1.3"
+    }
+	buildTypes {
+		release {
+			runProguard false
+			proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
+		}
+	}
 }
 
 dependencies {
     compile files ('libs/opencsv-2.3.jar')
-    compile 'com.android.support:support-v4:13.0.+'
+    compile 'com.android.support:appcompat-v7:+'
 }
 
-android {
-    compileSdkVersion 17
-    buildToolsVersion "17.0.0"
 
-    defaultConfig {
-        minSdkVersion 7
-        targetSdkVersion 16
-    }
-}

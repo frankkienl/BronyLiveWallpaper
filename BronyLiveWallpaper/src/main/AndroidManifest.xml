@@ -18,9 +18,9 @@ http://austiniousi.deviantart.com/art/Ponyville-Background-324408425
 //-->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
           package="nl.frankkie.bronylivewallpaper"
-          android:versionCode="8"
+          android:versionCode="9"
           android:installLocation="auto"
-          android:versionName="1.2.2">
+          android:versionName="1.3">
 
 
     <uses-sdk
