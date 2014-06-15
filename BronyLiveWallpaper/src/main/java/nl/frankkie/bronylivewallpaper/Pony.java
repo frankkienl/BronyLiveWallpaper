@@ -183,8 +183,10 @@ public class Pony {
         CLog.v("BronyLiveWallpaper", "Loaded " + name);
         setCurrentBehaviour(getRandomBehaviour());
 
-        positionY = (float) (50 + (Math.random() * 600));
-        positionX = (float) (50 + (Math.random() * 400));
+        //positionY = (float) (50 + (Math.random() * 600));
+        //positionX = (float) (50 + (Math.random() * 400));
+        positionX = (float) (5 + (Math.random()) * (getScreen().width() - 20));
+        positionY = (float) (5 + (Math.random()) * (getScreen().height() - 20));
     }
 
     public void updateTick() {
